@@ -1,4 +1,4 @@
-<%@page import="com.mysql.jdbc.Driver"%>
+<%@page import="config.Connect"%>
 <%@page import="java.sql.*"%>
 <%@page import="java.util.Objects"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
@@ -17,13 +17,6 @@
  <title>Login</title>
 
 </head>
-
-
-<%
-Connection con = null;
-Statement st = null;
-ResultSet rs = null;
-%>
 
 <body>
 
@@ -68,11 +61,15 @@ ResultSet rs = null;
 			
 			<p align="center" class="text-light mt-2">
 				<%
+				ResultSet rs = null;
 				String usuario = "";
 				String senha = "";
+				String nomeUsuario = "";						
 				String user = "";
 				String pass = "";
-	            							
+				int i = 0;
+
+				//Request : obter o valor do parametro espeficado no name do input.
 				if (request.getParameter("usuarioForm") != null && !request.getParameter("usuarioForm").isEmpty()
 						&& request.getParameter("senhaForm") != null && !request.getParameter("senhaForm").isEmpty()) {
 
@@ -80,25 +77,28 @@ ResultSet rs = null;
 					senha = request.getParameter("senhaForm");
 
 				} else {
+					usuario = "xxxx";
 					out.println("É necessário o preenchimento dos campos usuario e senha");
-				}
-				;
+				};
 
-				try {
+				try {				
+					rs = Connect.declaracaoQuery().executeQuery("SELECT * FROM usuarios WHERE usuario = '" + usuario + "' and senha = '" + senha + "' ");
 					
-					Class.forName("com.mysql.cj.jdbc.Driver");
-					con = DriverManager.getConnection(
-					"jdbc:mysql://localhost:3306/javaweb?useTimezone=true&serverTimezone=UTC&user=root&password=admin");
-					st = con.createStatement();
-					rs = st.executeQuery("SELECT * FROM usuarios");
-
 					while (rs.next()) {
-						user = rs.getString(3);
-						pass = rs.getString(4);
+				       nomeUsuario = rs.getString(2);
+					   user = rs.getString(3);
+					   pass = rs.getString(4);
+					   i = rs.getRow();
 					}
+					
+					out.print(i);
 
-					if(usuario.trim().equalsIgnoreCase(user) && senha.trim().equalsIgnoreCase(pass)) response.sendRedirect("usuarios.jsp");	
-							
+					if (i > 0) {
+						session.setAttribute("nomeUsuario", nomeUsuario);
+						response.sendRedirect("usuarios.jsp");
+					} else
+						out.print("Dados incorretos");
+
 				} catch (Exception e) {
 					out.println(e.getCause());
 				}
